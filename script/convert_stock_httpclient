@@ -5,6 +5,18 @@ then
   exit 0
 fi
 
+if [ ! -f $1 ]
+then
+  echo "File $1 does not exist!"
+  exit 0
+fi
+
+if [ ! -f $2 ]
+then
+  echo "File $2 does not exist!"
+  exit 0
+fi
+
 PROJECTNAME=httpclientandroidlib
 PACKAGENAME=ch.boye.httpclientandroidlib
 ROOTDIR=`pwd`
