@@ -613,7 +613,7 @@ final class NTLMEngineImpl implements NTLMEngine {
         /** Constructor to use when message contents are known */
         NTLMMessage(String messageBody, int expectedType) throws NTLMEngineException {
             messageContents = Base64.decode(EncodingUtils.getBytes(messageBody,
-                    DEFAULT_CHARSET), Base64.DEFAULT);
+                    DEFAULT_CHARSET), Base64.NO_WRAP);
             // Look for NTLM message
             if (messageContents.length < SIGNATURE.length)
                 throw new NTLMEngineException("NTLM message decoding error - packet too short");
@@ -746,7 +746,7 @@ final class NTLMEngineImpl implements NTLMEngine {
             } else {
                 resp = messageContents;
             }
-            return EncodingUtils.getAsciiString(Base64.encode(resp, Base64.DEFAULT));
+            return EncodingUtils.getAsciiString(Base64.encode(resp, Base64.NO_WRAP));
         }
 
     }
