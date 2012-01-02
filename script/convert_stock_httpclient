@@ -1,21 +1,15 @@
 #!/bin/bash
-if [ $# -ne 2 ]
-then
-  echo "Usage: `basename $0` httpclient.tar.gz httpcore.tar.gz"
-  exit 0
-fi
+# Checkout svn repositories of core/client/cache
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpcore/tags/4.1.4-RC2/httpcore/ httpcore
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.2/httpclient/ httpclient
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.2/httpclient-cache/ httpclient-cache
 
-if [ ! -f $1 ]
-then
-  echo "File $1 does not exist!"
-  exit 0
-fi
+# Delete all .svn directories
+find . -type d -name ".svn" -exec rm -Rf {} +
 
-if [ ! -f $2 ]
-then
-  echo "File $2 does not exist!"
-  exit 0
-fi
+# Delete ehcache and memcached from httpclient-cache
+rm -Rf httpclient-cache/src/main/java/org/apache/http/impl/client/cache/ehcache
+rm -Rf httpclient-cache/src/main/java/org/apache/http/impl/client/cache/memcached
 
 PROJECTNAME=httpclientandroidlib
 PACKAGENAME=ch.boye.httpclientandroidlib
@@ -23,26 +17,22 @@ ROOTDIR=`pwd`
 PACKAGEDIR=${ROOTDIR}/${PROJECTNAME}/src/${PACKAGENAME//./\/}
 ANDROIDPROJECTPATH=${ROOTDIR}/${PROJECTNAME}
 
-# Create Android library project (target 7 = SDK 8)
+# Create Android library project
 rm -Rf ${ANDROIDPROJECTPATH}
-android create lib-project --name ${PROJECTNAME} \
---target 7 \
---path ${ANDROIDPROJECTPATH} \
---package ${PACKAGENAME}
+android create lib-project -n ${PROJECTNAME} -t android-8 -p ${ANDROIDPROJECTPATH} -k ${PACKAGENAME}
 
 # Create package directory
 mkdir -p ${PACKAGEDIR}
 
-# Extract httpcore and httpclient
-tar xvfz $1
-tar xvfz $2
-
 # Copy all source files to new package directory
 CLIENTDIR=`find . -type d | grep '/httpclient/src/main/java/org/apache/http$'`
+CLIENTCACHEDIR=`find . -type d | grep '/httpclient-cache/src/main/java/org/apache/http$'`
 COREDIR=`find . -type d | grep '/httpcore/src/main/java/org/apache/http$'`
 cd ${ROOTDIR}/${COREDIR}
 cp -R * ${PACKAGEDIR}
 cd ${ROOTDIR}/${CLIENTDIR}
+cp -R * ${PACKAGEDIR}
+cd ${ROOTDIR}/${CLIENTCACHEDIR}
 cp -R * ${PACKAGEDIR}
 
 cd ${PACKAGEDIR}
