@@ -7,6 +7,7 @@ public class HttpClientAndroidLog {
 	private String logTag;
 	private boolean debugEnabled;
 	private boolean errorEnabled;
+	private boolean traceEnabled;
 	private boolean warnEnabled;
 	private boolean infoEnabled;
 	
@@ -14,6 +15,7 @@ public class HttpClientAndroidLog {
 		logTag=tag.toString();
 		debugEnabled=false;
 		errorEnabled=false;
+		traceEnabled=false;
 		warnEnabled=false;
 		infoEnabled=false;
 	}
@@ -79,6 +81,22 @@ public class HttpClientAndroidLog {
 	}
 
 	public void info(Object message, Throwable t) {
+		Log.i(logTag, message.toString(), t);
+	}
+	
+	public void enableTrace(boolean enable) {
+		traceEnabled=enable;
+	}
+
+	public boolean isTraceEnabled() {
+		return traceEnabled;
+	}
+	
+	public void trace(Object message) {
+		Log.i(logTag, message.toString());
+	}
+
+	public void trace(Object message, Throwable t) {
 		Log.i(logTag, message.toString(), t);
 	}
 	
