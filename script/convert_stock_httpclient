@@ -1,4 +1,6 @@
 #!/bin/bash
+# httpclientandroidlib version
+HTTPCLIENTANDROIDLIB_VER=1.0.2
 # Checkout svn repositories of core/client/cache
 svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpcore/tags/4.1.4-RC2/httpcore/ httpcore
 svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.2/httpclient/ httpclient
@@ -69,8 +71,11 @@ find . -name "*.java" -exec sed -i "s/org\.apache\.http/${PACKAGENAME}/g" {} +
 cd ${ANDROIDPROJECTPATH}
 sed -i "s/ACTIVITY_ENTRY_NAME/${PROJECTNAME}/g" AndroidManifest.xml
 sed -i '/<\/project>/ i <path id="android\.libraries\.src"><path refid="project\.libraries\.src" \/><\/path><path id="android\.libraries\.jars"><path refid="project\.libraries\.jars" \/><\/path>' build.xml
+cd ${ROOTDIR}
+tar cvfz httpclientandroidlib-${HTTPCLIENTANDROIDLIB_VER}.tar.gz httpclientandroidlib
+cd ${ANDROIDPROJECTPATH}
 ant compile
 cd bin/classes
-zip -r ${PROJECTNAME}.jar *
-mv ${PROJECTNAME}.jar ${ROOTDIR}
+zip -r ${PROJECTNAME}-${HTTPCLIENTANDROIDLIB_VER}.jar *
+mv ${PROJECTNAME}-${HTTPCLIENTANDROIDLIB_VER}.jar ${ROOTDIR}
 cd ${ROOTDIR}
