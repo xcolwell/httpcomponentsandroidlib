@@ -1,6 +1,6 @@
 #!/bin/bash
 # httpclientandroidlib version
-HTTPCLIENTANDROIDLIB_VER=1.0.2
+HTTPCLIENTANDROIDLIB_VER=1.0.3
 # Checkout svn repositories of core/client/cache
 svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpcore/tags/4.1.4-RC2/httpcore/ httpcore
 svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.2/httpclient/ httpclient
@@ -21,7 +21,7 @@ ANDROIDPROJECTPATH=${ROOTDIR}/${PROJECTNAME}
 
 # Create Android library project
 rm -Rf ${ANDROIDPROJECTPATH}
-android create lib-project -n ${PROJECTNAME} -t android-8 -p ${ANDROIDPROJECTPATH} -k ${PACKAGENAME}
+android create lib-project -n ${PROJECTNAME} -t android-3 -p ${ANDROIDPROJECTPATH} -k ${PACKAGENAME}
 
 # Create package directory
 mkdir -p ${PACKAGEDIR}
@@ -42,7 +42,12 @@ cd ${PACKAGEDIR}
 # Add androidextra.HttpClientAndroidLog to the package
 mkdir androidextra
 cp ${ROOTDIR}/androidextra/* androidextra
-find . -name "HttpClientAndroidLog.java" -exec sed -i "s/sedpackagename/${PACKAGENAME}/g" {} +
+cd androidextra
+find . -name "*.java" -exec sed -i "s/sedpackagename/${PACKAGENAME}/g" {} +
+cd ..
+
+# Apply Android bugfix https://android-review.googlesource.com/#/c/15755/1/src/org/apache/http/impl/conn/DefaultClientConnectionOperator.java
+find . -name "DefaultClientConnectionOperator.java" -exec sed -i "s/conn.getSocket(), target.getHostName(), target.getPort()/conn.getSocket(), target.getHostName(), schm.resolvePort(target.getPort())/g" {} +
 
 # Delete classes dependent on org.ietf
 rm impl/auth/NegotiateScheme.java
@@ -51,7 +56,7 @@ find . -name "*.java" -exec sed -i "/impl\.auth\.NegotiateSchemeFactory;/c \/\* 
 find . -name "AbstractHttpClient.java" -exec sed -i -n '1h;1!H;${;g;s/registry.register([^)]*NegotiateSchemeFactory());/\/\* NegotiateSchemeFactory removed by HttpClient for Android script. \*\//g;p;}' {} +
 
 # Replace Base64 encoding with android.util.Base64 (This way it's only compatible with API 8+)
-find . -name "*.java" -exec sed -i "/commons\.codec\.binary\.Base64;/c import android\.util\.Base64;" {} +
+find . -name "*.java" -exec sed -i "/commons\.codec\.binary\.Base64;/c import ${PACKAGENAME}\.androidextra.Base64;" {} +
 find . -name "BasicScheme.java" -exec sed -i -n '1h;1!H;${;g;s/Base64.encodeBase64(\([^;]*\));/Base64.encode(\1, Base64.NO_WRAP);/g;p;}' {} +
 find . -name "NTLMEngineImpl.java" -exec sed -i -n '1h;1!H;${;g;s/Base64.encodeBase64(resp)/Base64.encode(resp, Base64.NO_WRAP)/g;p;}' {} +
 find . -name "*.java" -exec sed -i -n '1h;1!H;${;g;s/Base64.decodeBase64(\([^;]*\));/Base64.decode(\1, Base64.NO_WRAP);/g;p;}' {} +
@@ -74,8 +79,7 @@ sed -i '/<\/project>/ i <path id="android\.libraries\.src"><path refid="project\
 cd ${ROOTDIR}
 tar cvfz httpclientandroidlib-${HTTPCLIENTANDROIDLIB_VER}.tar.gz httpclientandroidlib
 cd ${ANDROIDPROJECTPATH}
-ant compile
-cd bin/classes
-zip -r ${PROJECTNAME}-${HTTPCLIENTANDROIDLIB_VER}.jar *
-mv ${PROJECTNAME}-${HTTPCLIENTANDROIDLIB_VER}.jar ${ROOTDIR}
+ant release
+cd bin
+mv classes.jar ${ROOTDIR}/${PROJECTNAME}-${HTTPCLIENTANDROIDLIB_VER}.jar
 cd ${ROOTDIR}
