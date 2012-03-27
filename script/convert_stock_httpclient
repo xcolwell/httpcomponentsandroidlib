@@ -1,10 +1,11 @@
 #!/bin/bash
 # httpclientandroidlib version
-HTTPCLIENTANDROIDLIB_VER=1.0.3
+HTTPCLIENTANDROIDLIB_VER=1.0.4
 # Checkout svn repositories of core/client/cache
 svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpcore/tags/4.1.4-RC2/httpcore/ httpcore
-svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.2/httpclient/ httpclient
-svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.2/httpclient-cache/ httpclient-cache
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.3/httpclient/ httpclient
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.3/httpclient-cache/ httpclient-cache
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.3/httpmime/ httpmime
 
 # Delete all .svn directories
 find . -type d -name ".svn" -exec rm -Rf {} +
@@ -29,12 +30,15 @@ mkdir -p ${PACKAGEDIR}
 # Copy all source files to new package directory
 CLIENTDIR=`find . -type d | grep '/httpclient/src/main/java/org/apache/http$'`
 CLIENTCACHEDIR=`find . -type d | grep '/httpclient-cache/src/main/java/org/apache/http$'`
+CLIENTMIMEDIR=`find . -type d | grep '/httpmime/src/main/java/org/apache/http$'`
 COREDIR=`find . -type d | grep '/httpcore/src/main/java/org/apache/http$'`
 cd ${ROOTDIR}/${COREDIR}
 cp -R * ${PACKAGEDIR}
 cd ${ROOTDIR}/${CLIENTDIR}
 cp -R * ${PACKAGEDIR}
 cd ${ROOTDIR}/${CLIENTCACHEDIR}
+cp -R * ${PACKAGEDIR}
+cd ${ROOTDIR}/${CLIENTMIMEDIR}
 cp -R * ${PACKAGEDIR}
 
 cd ${PACKAGEDIR}
