@@ -1,11 +1,11 @@
 #!/bin/bash
 # httpclientandroidlib version
-HTTPCLIENTANDROIDLIB_VER=1.1.0
+HTTPCLIENTANDROIDLIB_VER=1.1.1
 # Checkout svn repositories of core/client/cache
-svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpcore/tags/4.2/httpcore/ httpcore
-svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.3/httpclient/ httpclient
-svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.3/httpclient-cache/ httpclient-cache
-svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.1.3/httpmime/ httpmime
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpcore/tags/4.2.1/httpcore/ httpcore
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.2.1/httpclient/ httpclient
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.2.1/httpclient-cache/ httpclient-cache
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.2.1/httpmime/ httpmime
 
 # Delete all .svn directories
 find . -type d -name ".svn" -exec rm -Rf {} +
@@ -56,10 +56,22 @@ find . -name "DefaultClientConnectionOperator.java" -exec sed -i "s/conn.getSock
 # Delete classes dependent on org.ietf
 rm impl/auth/NegotiateScheme.java
 rm impl/auth/NegotiateSchemeFactory.java
+rm impl/auth/GGSSchemeBase.java
+rm impl/auth/KerberosScheme.java
+rm impl/auth/KerberosSchemeFactory.java
+rm impl/auth/SPNegoScheme.java
+rm impl/auth/SPNegoSchemeFactory.java
+
+find . -name "*.java" -exec sed -i "/impl\.auth\.KerberosSchemeFactory;/c \/\* KerberosSchemeFactory removed by HttpClient for Android script. \*\/" {} +
+find . -name "*.java" -exec sed -i "/impl\.auth\.SPNegoSchemeFactory;/c \/\* SPNegoSchemeFactory removed by HttpClient for Android script. \*\/" {} +
 find . -name "*.java" -exec sed -i "/impl\.auth\.NegotiateSchemeFactory;/c \/\* NegotiateSchemeFactory removed by HttpClient for Android script. \*\/" {} +
+find . -name "ProxyClient.java" -exec sed -i -n '1h;1!H;${;g;s/this.authSchemeRegistry.register([^)]*SPNegoSchemeFactory());/\/\* SPNegoSchemeFactory removed by HttpClient for Android script. \*\//g;p;}' {} +
+find . -name "ProxyClient.java" -exec sed -i -n '1h;1!H;${;g;s/this.authSchemeRegistry.register([^)]*KerberosSchemeFactory());/\/\* KerberosSchemeFactory removed by HttpClient for Android script. \*\//g;p;}' {} +
+find . -name "AbstractHttpClient.java" -exec sed -i -n '1h;1!H;${;g;s/registry.register([^)]*SPNegoSchemeFactory());/\/\* SPNegoSchemeFactory removed by HttpClient for Android script. \*\//g;p;}' {} +
+find . -name "AbstractHttpClient.java" -exec sed -i -n '1h;1!H;${;g;s/registry.register([^)]*KerberosSchemeFactory());/\/\* KerberosSchemeFactory removed by HttpClient for Android script. \*\//g;p;}' {} +
 find . -name "AbstractHttpClient.java" -exec sed -i -n '1h;1!H;${;g;s/registry.register([^)]*NegotiateSchemeFactory());/\/\* NegotiateSchemeFactory removed by HttpClient for Android script. \*\//g;p;}' {} +
 
-# Replace Base64 encoding with android.util.Base64 (This way it's only compatible with API 8+)
+# Replace Base64 encoding with android.util.Base64
 find . -name "*.java" -exec sed -i "/commons\.codec\.binary\.Base64;/c import ${PACKAGENAME}\.androidextra.Base64;" {} +
 find . -name "BasicScheme.java" -exec sed -i -n '1h;1!H;${;g;s/Base64.encodeBase64(\([^;]*\));/Base64.encode(\1, Base64.NO_WRAP);/g;p;}' {} +
 find . -name "NTLMEngineImpl.java" -exec sed -i -n '1h;1!H;${;g;s/Base64.encodeBase64(resp)/Base64.encode(resp, Base64.NO_WRAP)/g;p;}' {} +
