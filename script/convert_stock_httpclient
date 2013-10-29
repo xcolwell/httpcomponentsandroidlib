@@ -1,11 +1,11 @@
 #!/bin/bash
 # httpclientandroidlib version
-HTTPCLIENTANDROIDLIB_VER=1.1.2
+HTTPCLIENTANDROIDLIB_VER=1.1.3
 # Checkout svn repositories of core/client/cache
-svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpcore/tags/4.2.3/httpcore/ httpcore
-svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.2.3/httpclient/ httpclient
-svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.2.3/httpclient-cache/ httpclient-cache
-svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.2.3/httpmime/ httpmime
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpcore/tags/4.3/httpcore/ httpcore
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.3.1/httpclient/ httpclient
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.3.1/httpclient-cache/ httpclient-cache
+svn checkout http://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.3.1/httpmime/ httpmime
 
 # Delete all .svn directories
 find . -type d -name ".svn" -exec rm -Rf {} +
@@ -22,23 +22,35 @@ ANDROIDPROJECTPATH=${ROOTDIR}/${PROJECTNAME}
 
 # Create Android library project
 rm -Rf ${ANDROIDPROJECTPATH}
-android create lib-project -n ${PROJECTNAME} -t android-3 -p ${ANDROIDPROJECTPATH} -k ${PACKAGENAME}
+android create lib-project -n ${PROJECTNAME} -t android-18 -p ${ANDROIDPROJECTPATH} -k ${PACKAGENAME}
 
 # Create package directory
 mkdir -p ${PACKAGEDIR}
 
 # Copy all source files to new package directory
 CLIENTDIR=`find . -type d | grep '/httpclient/src/main/java/org/apache/http$'`
+CLIENTDIR_DEPRECATED=`find . -type d | grep '/httpclient/src/main/java-deprecated/org/apache/http$'`
 CLIENTCACHEDIR=`find . -type d | grep '/httpclient-cache/src/main/java/org/apache/http$'`
+CLIENTCACHEDIR_DEPRECATED=`find . -type d | grep '/httpclient-cache/src/main/java-deprecated/org/apache/http$'`
 CLIENTMIMEDIR=`find . -type d | grep '/httpmime/src/main/java/org/apache/http$'`
+CLIENTMIMEDIR_DEPRECATED=`find . -type d | grep '/httpmime/src/main/java-deprecated/org/apache/http$'`
 COREDIR=`find . -type d | grep '/httpcore/src/main/java/org/apache/http$'`
+COREDIR_DEPRECATED=`find . -type d | grep '/httpcore/src/main/java-deprecated/org/apache/http$'`
 cd ${ROOTDIR}/${COREDIR}
+cp -R * ${PACKAGEDIR}
+cd ${ROOTDIR}/${COREDIR_DEPRECATED}
+cp -R * ${PACKAGEDIR}
+cd ${ROOTDIR}/${CLIENTDIR_DEPRECATED}
 cp -R * ${PACKAGEDIR}
 cd ${ROOTDIR}/${CLIENTDIR}
 cp -R * ${PACKAGEDIR}
 cd ${ROOTDIR}/${CLIENTCACHEDIR}
 cp -R * ${PACKAGEDIR}
+cd ${ROOTDIR}/${CLIENTCACHEDIR_DEPRECATED}
+cp -R * ${PACKAGEDIR}
 cd ${ROOTDIR}/${CLIENTMIMEDIR}
+cp -R * ${PACKAGEDIR}
+cd ${ROOTDIR}/${CLIENTMIMEDIR_DEPRECATED}
 cp -R * ${PACKAGEDIR}
 
 cd ${PACKAGEDIR}
@@ -70,10 +82,17 @@ find . -name "ProxyClient.java" -exec sed -i -n '1h;1!H;${;g;s/this.authSchemeRe
 find . -name "AbstractHttpClient.java" -exec sed -i -n '1h;1!H;${;g;s/registry.register([^)]*SPNegoSchemeFactory());/\/\* SPNegoSchemeFactory removed by HttpClient for Android script. \*\//g;p;}' {} +
 find . -name "AbstractHttpClient.java" -exec sed -i -n '1h;1!H;${;g;s/registry.register([^)]*KerberosSchemeFactory());/\/\* KerberosSchemeFactory removed by HttpClient for Android script. \*\//g;p;}' {} +
 find . -name "AbstractHttpClient.java" -exec sed -i -n '1h;1!H;${;g;s/registry.register([^)]*NegotiateSchemeFactory());/\/\* NegotiateSchemeFactory removed by HttpClient for Android script. \*\//g;p;}' {} +
+find . -name "HttpClientBuilder.java" -exec sed -i -n '1h;1!H;${;g;s/.register([^)]*SPNegoSchemeFactory())/\/\* SPNegoSchemeFactory removed by HttpClient for Android script. \*\//g;p;}' {} +
+find . -name "HttpClientBuilder.java" -exec sed -i -n '1h;1!H;${;g;s/.register([^)]*KerberosSchemeFactory())/\/\* KerberosSchemeFactory removed by HttpClient for Android script. \*\//g;p;}' {} +
+
 
 # Replace Base64 encoding with android.util.Base64
 find . -name "*.java" -exec sed -i "/commons\.codec\.binary\.Base64;/c import ${PACKAGENAME}\.androidextra.Base64;" {} +
+find . -name "BasicScheme.java" -exec sed -i -n '1h;1!H;${;g;s/Base64.encodeBase64(\([^;]*\), *false);/Base64.encode(\1, Base64.NO_WRAP);/g;p;}' {} +
 find . -name "BasicScheme.java" -exec sed -i -n '1h;1!H;${;g;s/Base64.encodeBase64(\([^;]*\));/Base64.encode(\1, Base64.NO_WRAP);/g;p;}' {} +
+find . -name "BasicScheme.java" -exec sed -i -n '1h;1!H;${;g;s/private final Base64 base64codec;/\/\* base64codec removed by HttpClient for Android script. \*\//g;p;}' {} +
+find . -name "BasicScheme.java" -exec sed -i -n '1h;1!H;${;g;s/this.base64codec = [^;]*;/\/\* base64codec removed by HttpClient for Android script. \*\//g;p;}' {} +
+find . -name "BasicScheme.java" -exec sed -i -n '1h;1!H;${;g;s/base64codec.encode(\([^;]*\));/Base64.encode(\1, Base64.DEFAULT);/g;p;}' {} +
 find . -name "NTLMEngineImpl.java" -exec sed -i -n '1h;1!H;${;g;s/Base64.encodeBase64(resp)/Base64.encode(resp, Base64.NO_WRAP)/g;p;}' {} +
 find . -name "*.java" -exec sed -i -n '1h;1!H;${;g;s/Base64.decodeBase64(\([^;]*\));/Base64.decode(\1, Base64.NO_WRAP);/g;p;}' {} +
 
@@ -81,6 +100,8 @@ find . -name "*.java" -exec sed -i -n '1h;1!H;${;g;s/Base64.decodeBase64(\([^;]*
 find . -name "*.java" -exec sed -i "/commons\.logging\.Log;/c import ${PACKAGENAME}\.androidextra\.HttpClientAndroidLog;" {} +
 find . -name "*.java" -exec sed -i "/commons\.logging\.LogFactory;/c \/\* LogFactory removed by HttpClient for Android script. \*\/" {} +
 find . -name "*.java" -exec sed -i 's/Log log/HttpClientAndroidLog log/g' {} +
+find . -name "*.java" -exec sed -i 's/Log headerlog/HttpClientAndroidLog headerlog/g' {} +
+find . -name "*.java" -exec sed -i 's/Log wirelog/HttpClientAndroidLog wirelog/g' {} +
 find . -name "*.java" -exec sed -i 's/private final HttpClientAndroidLog \(.*\) = LogFactory.getLog(\(.*\));/public HttpClientAndroidLog \1 = new HttpClientAndroidLog(\2);/g' {} +
 find . -name "*.java" -exec sed -i 's/private final Log \(.*\) = LogFactory.getLog(\(.*\));/public HttpClientAndroidLog \1 = new HttpClientAndroidLog(\2);/g' {} +
 find . -name "*.java" -exec sed -i 's/private final HttpClientAndroidLog log/public HttpClientAndroidLog log/g' {} +
