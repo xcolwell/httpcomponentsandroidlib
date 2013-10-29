@@ -2,3 +2,4 @@ Project contents:
 
 ./script/
   Script to convert a stock HttpClient into an Android library
+  Does not work on OSX. Use Ubuntu and install android and install ia32-libs
